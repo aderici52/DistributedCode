@@ -1,0 +1,29 @@
+#include<iostream>
+#include <stdlib.h>
+#include "ece454rpc_types.h"
+
+using namespace std;
+
+int main(int argc,char *argv[])
+{
+    return_type newValue;
+
+    if (argc != 3)
+    {
+      //printf("usage:  udpcli <IP address> <Port Number>\n");
+      exit(1);
+    }
+
+    int ajj = 47;
+    int bjj = 53;
+    const char * ger = "IJDhasbnfiw";
+
+    
+    newValue = make_remote_call((argv[1]), (atoi((argv[2]))), "add_me", 2, sizeof(ajj), &ajj, sizeof(bjj), &bjj);
+    cout<<"\nServer says: "<< *((int *)(newValue.return_val)) <<endl;
+
+    newValue = make_remote_call((argv[1]), (atoi((argv[2]))), "concat_me", 2, 7, "hellon", 6, "there");
+    cout<<"\nServer says: ["<< ((char *)(newValue.return_val)) << "]" << endl; 
+    cout << "With return Size:  " << ((newValue.return_size)) << ";" <<endl;
+    //newValue = make_remote_call((argv[1]), (atoi((argv[2]))), "AProc", 2, sizeof(ajj), &ajj, strlen(ger), ger  );
+}

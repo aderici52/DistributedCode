@@ -1,0 +1,90 @@
+#include<iostream>
+#include "ece454rpc_types.h"
+#include <string.h>
+
+
+using namespace std;
+// For int testing
+int ret_int;
+return_type r;
+
+
+// For String testing
+char ret_str[950];
+
+return_type add_me(const int nparams, arg_type * a)
+{
+    // cout << "\n ADDME ENTERED!!!!" << endl;
+    //return (a_arg + b_arg);
+    if(nparams != 2) {
+	/* Error! */
+	r.return_val = NULL;
+	r.return_size = 0;
+	return r;
+    }
+
+    if(a->arg_size != sizeof(int) ||
+	a->next->arg_size != sizeof(int)) {
+        /* Error! */
+	r.return_val = NULL;
+	r.return_size = 0;
+	return r;
+    }
+
+    int i = *(int *)(a->arg_val);
+    int j = *(int *)(a->next->arg_val);
+    ret_int = i+j;
+    r.return_val = (void *)(&ret_int);
+    r.return_size = sizeof(int);
+    return r;
+    
+}
+
+return_type concat_me(const int nparams, arg_type * a)
+{
+    // cout << "\n CONCAT_ME ENTERED!!!!" << endl;
+    //return (a_arg + b_arg);
+    if(nparams != 2) {
+	/* Error! */
+	r.return_val = NULL;
+	r.return_size = 0;
+	return r;
+    }
+
+    //if(a->arg_size != sizeof(int) ||
+	//a->next->arg_size != sizeof(int)) {
+        /* Error! */
+	//r.return_val = NULL;
+	//r.return_size = 0;
+	//return r;
+    //}
+
+
+
+    //cout << "After free";
+    
+    cout << "Entered concat_me" << endl;
+    char * i = (char *)(a->arg_val);
+    strcpy(ret_str, i);
+    char * j = (char *)(a->next->arg_val);
+    strcat(ret_str,j);
+    r.return_val = (void *)(ret_str);
+    r.return_size = ((strlen(i)) + (strlen(j)));
+    cout << "Resultant STR: " << ret_str << endl;
+    return r;
+    
+}
+
+
+int main (int argc,char *argv[])
+{
+	bool valid_insertion = register_procedure("add_me",2,add_me);
+    //valid_insertion = register_procedure("prnt_str",2,prnt_str);
+	valid_insertion = register_procedure("concat_me",2,concat_me);
+
+
+    launch_server();
+ 
+    return 0;
+
+}
