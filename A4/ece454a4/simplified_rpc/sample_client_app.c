@@ -107,11 +107,11 @@ int main(int argc, char *argv[])
     }
     return_type ans;
 
-    ans = make_remote_call(argv[1], atoi(argv[2]), "nothing", 0);
+    //ans = make_remote_call(argv[1], atoi(argv[2]), "nothing", 0);
 
-    printf("nothing():: ans.return_val = %d\n", ans.return_size);
-
-    char * staticString = "./TempClientTest";
+    //printf("nothing():: ans.return_val = %d\n", ans.return_size);
+    // gcc -o myClient sample_client_app.c client_stub.c mybind.c helper.c
+    char * staticString = "./TempClientTest/MyFolder1/NewSemFolder/";
     char * testFileName;
 
     testFileName = (char *)calloc((strlen(staticString))+1, sizeof(char));
@@ -121,14 +121,21 @@ int main(int argc, char *argv[])
 
     printf("\n\nSending: %s; with size %d;\n\n", testFileName, (strlen(testFileName)+1));
 
-    ans = make_remote_call(argv[1], atoi(argv[2]),
-			 "fsMount", 1,
-			 strlen(testFileName)+1, testFileName);
+
+    printf("Making Call...\n");
+    //return 0;
+    //ans = make_remote_call(argv[1], atoi(argv[2]), "nothing", 0);
+    ans = make_remote_call(argv[1], atoi(argv[2]),"fsOpenDir", 1, (strlen(testFileName)+1), testFileName);
 
 
+    //printf("fsMount = %d\n", *(int *)(ans.return_val));
 
-
-
+    if (ans.return_size != 0) {
+       
+    } else {
+      // No SubFolders or files
+      return NULL;
+    }
 
 
 
