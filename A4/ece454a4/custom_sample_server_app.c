@@ -8,11 +8,14 @@
 #include <string.h>
 #include <stddef.h>
 #include "ece454rpc_types.h"
+#include "fsserver.h"
 #include "khash.h"
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <assert.h>
+#include <netdb.h>
+
 //#include "ece454_fs.h"
 
 #if 0
@@ -21,7 +24,7 @@
 
 
 
-
+extern int h_errno;
 
 // Below variables define which folders the client can mount on
 // Anything on or below these folders are ok
@@ -41,6 +44,10 @@ int arg_size_error = -6;
 int illegal_folder_access = -7;
 
 
+// Client side globals
+fsMountInstance * currentInstances_Head;
+fsMountInstance * currentInstances_Tail;
+int currentInstances_Count;
 
 /* We allocate a global variable for returns. However, 
  * r.return_val is allocated dynamically. We look to
@@ -418,8 +425,6 @@ return_type fsRemove(const int nparams, arg_type*a) {
     //return(remove(name));
 }
 
-
-
 return_type add(const int nparams, arg_type* a)
 {
     if(nparams != 2) {
@@ -582,6 +587,125 @@ char** str_split(char* a_str, const char a_delim)
     return result;
 }
 
+int checkAndMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
+		// fsMountInstance * currentInstances_Head;
+		// fsMountInstance * currentInstances_Tail;
+		// int currentInstances_Count;
+		
+		if ((currentInstances_Count == NULL) || (currentInstances_Count == -1) || 
+		    (currentInstances_Head == 0) || (currentInstances_Head == -1)) {
+			currentInstances_Count = 0;
+			currentInstances_Head = 0;
+			currentInstances_Tail = 0;
+		}
+		
+		// Check if we have the same server (IP and Port) with the same virtual folder
+		
+		fsMountInstance * mountIterator = currentInstances_Head;
+		
+		
+		while (mountIterator != 0) {
+		
+			if ((mountIterator->validOrNot == 1) && 
+			    (strcmp(mountIterator->serverIP,srvIpOrDomName) == 0) && 
+				(mountIterator->srvPort == srvPort) && 
+				(strcmp(mountIterator->localFolderName,localFolderName) == 0)) {
+					
+				return -1;
+			}
+			
+			mountIterator = mountIterator->nextMount;
+		}
+		
+		
+		// Passed all checks so add it
+		
+		if (currentInstances_Count == 0) {
+			
+			currentInstances_Head = (fsMountInstance *)(malloc((sizeof(fsMountInstance))));
+			currentInstances_Tail = currentInstances_Head;
+			
+		} else {
+			
+			currentInstances_Tail->nextMount = (fsMountInstance *)(malloc((sizeof(fsMountInstance))));
+			currentInstances_Tail = currentInstances_Tail->nextMount;
+			
+		}
+		
+		memcpy(currentInstances_Tail->serverIP,srvIpOrDomName,((strlen(srvIpOrDomName))+1));
+		currentInstances_Tail->srvPort  = srvPort;
+		memcpy(currentInstances_Tail->localFolderName,localFolderName,((strlen(localFolderName))+1));
+		currentInstances_Tail->validOrNot = 1;
+		
+		//printf("%s",(currentInstances_Tail->serverIP));
+		//printf("\n");
+		
+		// Successful addition
+		currentInstances_Count++;
+		return 0;
+	
+	
+}
+
+int fsMountClient(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
+		// Testing "fsMount"
+	
+	struct hostent* pHostInfo;
+	long nHostAddress;
+	struct in_addr **addr_list;
+	
+	return_type ans;
+	
+	
+	
+	pHostInfo=gethostbyname(srvIpOrDomName);
+
+	if(!pHostInfo){
+		printf("Could not resolve host name\n");
+		return -1;
+	}
+	
+
+	addr_list = (struct in_addr **)pHostInfo->h_addr_list;
+	
+	
+	char * finalIP = (char *)(inet_ntoa(*addr_list[0]));
+    //printf("\n");
+	//printf("%s",finalIP);
+    //printf("\n");
+	
+	
+	
+	
+	  
+	   
+	
+	
+	int additionResult = checkAndMount(finalIP, srvPort, localFolderName);
+	
+	if (additionResult == 0) {
+		// TODO UNCOMMENT BELOW UPON DEPLOYMENT
+		/*
+		ans = make_remote_call(srvIpOrDomName, srvPort,"fsMount", 0);
+		
+		if ((ans.return_size != (sizeof(int))) || ((*(int *)(ans.return_val)) < 0)) {
+			return -1;
+		}
+		
+		currentInstances_Tail->correspondenceID = *(int *)(ans.return_val);
+		
+		*/
+	}
+	
+	
+	return additionResult;
+}
+
+int fsUnmountClient(const char *localFolderName) {
+	
+	
+}
+
 int main(int argc, char **argv) {
     /*register_procedure("addtwo", 2, add);
     register_procedure("pickFirst", 2, pickFirst);
@@ -628,15 +752,30 @@ int main(int argc, char **argv) {
 
 	
 	next_available_client_id = 0;
+	
+	
+	// Client Main Program
+	//lastCreatedMountInstance = -1;	
+	
+	
+	// Client Main Complete
 
 
+	fsMountClient("ecelinux3.uwaterloo.ca",5000,"/home/mhderici");
+	fsMountClient("ecelinux3.uwaterloo.ca",5000,"/home/mhdericis");
+	fsMountClient("ecelinux3.uwaterloo.ca",5000,"/home/mhderici");
 
 	// TESTING "fsOpenDir" on 
 
+	
+	
 	char * myCH = "";
 	
 	char** splitArr;
-
+	
+	
+    //printf("%s ", inet_ntoa(*addr_list[1]));
+	
 
     //printf("files/folders=[%s]\n\n", myCH);
 
